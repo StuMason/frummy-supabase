@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { toast } from 'sonner'
 
 export const Route = createFileRoute('/auth/login')({
   component: Login,
@@ -30,9 +31,10 @@ function Login() {
 
     if (error) {
       setError(error.message)
+      toast.error('Login failed', { description: error.message })
       setLoading(false)
     } else {
-      // Redirect to dashboard on success
+      toast.success('Welcome back!', { description: 'Successfully signed in' })
       navigate({ to: '/dashboard' })
     }
   }

@@ -1,4 +1,4 @@
-# Frummy
+# Frummy Supabase
 
 A DUMB frontend template for building Supabase + n8n applications with **ZERO business logic** in the frontend.
 
@@ -39,7 +39,7 @@ npm install
 npm run dev
 ```
 
-Visit `http://localhost:5173` - you should see the landing page!
+Visit `http://localhost:5173` - you should see the landing page.
 
 ### 4. (Optional) Disable email confirmation
 
@@ -51,64 +51,75 @@ For development, you might want to disable email confirmation:
 
 This lets you sign up and test immediately without setting up email.
 
+---
+
 ## Tech Stack
 
-- **[Vite](https://vitejs.dev)** (using rolldown-vite for faster builds)
-- **[React 19](https://react.dev)** with TypeScript
+- **[Vite](https://vitejs.dev)** - Build tool (using rolldown-vite for faster builds)
+- **[React 19](https://react.dev)** - UI framework with TypeScript
 - **[TanStack Router](https://tanstack.com/router)** - Type-safe file-based routing
-- **[Tailwind CSS v4](https://tailwindcss.com)** - Styling
+- **[Tailwind CSS v4](https://tailwindcss.com)** - Utility-first CSS framework
 - **[shadcn/ui](https://ui.shadcn.com)** - Component library (Radix UI + Tailwind)
 - **[Supabase](https://supabase.com)** - Backend (database, auth, realtime)
+- **[Sonner](https://sonner.emilkowal.ski/)** - Toast notifications
+
+---
 
 ## Project Structure
 
 ```
 src/
 ├── components/
-│   ├── ui/                    # shadcn/ui components
-│   ├── nav.tsx                # Main navigation
-│   ├── footer.tsx             # Footer
+│   ├── ui/                    # shadcn/ui components (Button, Card, etc.)
+│   ├── nav.tsx                # Main navigation with auth state
+│   ├── footer.tsx             # Footer component
 │   ├── theme-toggle.tsx       # Dark/light mode toggle
+│   ├── loading.tsx            # Loading states (spinner, full-screen)
 │   └── dashboard-layout.tsx   # Reusable layout for protected pages
 ├── lib/
-│   ├── auth-context.tsx       # Auth state management
-│   ├── theme-provider.tsx     # Theme state management
+│   ├── auth-context.tsx       # Auth state management (useAuth hook)
+│   ├── theme-provider.tsx     # Theme state management (dark/light)
 │   ├── supabase/
 │   │   └── client.ts          # Supabase client setup
-│   └── utils.ts               # Utilities (cn, etc.)
+│   └── utils.ts               # Utilities (cn for className merging)
 ├── routes/                    # TanStack Router file-based routes
-│   ├── __root.tsx             # Root layout
+│   ├── __root.tsx             # Root layout (providers, 404 handler)
 │   ├── index.tsx              # Landing page (/)
-│   ├── dashboard.tsx          # Dashboard (/dashboard)
+│   ├── dashboard.tsx          # Dashboard (/dashboard) - protected
 │   └── auth/
-│       ├── login.tsx          # Login page
+│       ├── login.tsx          # Login page with toast notifications
 │       └── signup.tsx         # Signup page
 ├── App.tsx                    # Router setup
 ├── main.tsx                   # Entry point
-└── index.css                  # Global styles + theme
+└── index.css                  # Global styles + theme variables
 ```
+
+---
 
 ## Key Concepts
 
-### 🚫 ZERO Business Logic in Frontend
+### ZERO Business Logic in Frontend
 
 This template enforces a strict rule: **NO BUSINESS LOGIC IN THE FRONTEND**.
 
-**✅ What you CAN do:**
+#### What you CAN do
+
 - Auth (login, signup, logout)
 - CRUD operations (create, read, update, delete)
 - Realtime subscriptions
 - Display data
 - Form validation (format only, e.g., email format)
 
-**❌ What you CANNOT do:**
+#### What you CANNOT do
+
 - Business calculations
 - Status transitions based on business rules
 - Workflow automation
 - Complex data transformations
 - Background processing
 
-**Where business logic belongs:**
+#### Where business logic belongs
+
 All business logic should be implemented in **n8n workflows**, triggered by Supabase database triggers.
 
 ### The Flow
@@ -128,6 +139,8 @@ Supabase: Broadcasts change via Realtime
     ↓
 Frontend: Updates UI (via realtime subscription)
 ```
+
+---
 
 ## Common Tasks
 
@@ -153,18 +166,21 @@ function Settings() {
 }
 ```
 
-3. TanStack Router will automatically pick it up!
+3. TanStack Router will automatically pick it up.
 
 ### Add a protected route
 
 Use the auth check pattern:
 
 ```tsx
+import { Loading } from '@/components/loading'
+import { useAuth } from '@/lib/auth-context'
+
 function MyProtectedPage() {
   const { user, loading } = useAuth()
 
   if (loading) {
-    return <div>Loading...</div>
+    return <Loading text="Loading..." fullScreen />
   }
 
   if (!user) {
@@ -176,6 +192,21 @@ function MyProtectedPage() {
 }
 ```
 
+### Show toast notifications
+
+```tsx
+import { toast } from 'sonner'
+
+// Success toast
+toast.success('Success!', { description: 'Your changes have been saved' })
+
+// Error toast
+toast.error('Error', { description: 'Something went wrong' })
+
+// Info toast
+toast.info('Info', { description: 'Please check your email' })
+```
+
 ### Add a new UI component
 
 Use shadcn/ui CLI:
@@ -183,6 +214,7 @@ Use shadcn/ui CLI:
 ```bash
 npx shadcn@latest add button
 npx shadcn@latest add card
+npx shadcn@latest add dialog
 # etc.
 ```
 
@@ -214,25 +246,32 @@ function MyComponent() {
 }
 ```
 
+---
+
 ## Database Guidelines
 
 See [CLAUDE.md](./CLAUDE.md) for comprehensive database, RLS, and Supabase Realtime guidelines.
 
 **Quick tips:**
+
 - Always enable RLS on new tables
 - Use lowercase SQL, snake_case naming
 - One RLS policy per operation per role
 - Index columns used in RLS policies
 - Use `broadcast` for realtime (NOT `postgres_changes`)
 
+---
+
 ## Scripts
 
 ```bash
 npm run dev      # Start dev server
-npm run build    # Build for production
+npm run build    # Build for production (TypeScript check + Vite build)
 npm run preview  # Preview production build
-npm run lint     # Lint code
+npm run lint     # Lint code with ESLint
 ```
+
+---
 
 ## Environment Variables
 
@@ -243,32 +282,49 @@ VITE_SUPABASE_URL=your-project-url
 VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-## Deployment
-
-This is a static SPA. Deploy to:
-- **Vercel**: Connect repo, auto-deploy
-- **Netlify**: Connect repo, auto-deploy
-- **Cloudflare Pages**: Connect repo, auto-deploy
-
-Make sure to add environment variables in your deployment platform.
-
-## Features
-
-✅ Authentication (Supabase Auth)
-✅ Protected routes
-✅ Dark/light mode
-✅ Responsive design
-✅ Type-safe routing (TanStack Router)
-✅ Clean component architecture
-✅ Realtime subscriptions ready
-
-## Need Help?
-
-- **Supabase Docs**: [supabase.com/docs](https://supabase.com/docs)
-- **TanStack Router**: [tanstack.com/router](https://tanstack.com/router)
-- **shadcn/ui**: [ui.shadcn.com](https://ui.shadcn.com)
-- **Tailwind CSS**: [tailwindcss.com](https://tailwindcss.com)
+**Note:** Never commit `.env.local` to version control. It's already in `.gitignore`.
 
 ---
 
-**Remember:** This is a DUMB frontend. Keep it simple. Keep business logic in n8n. 🧠
+## Features
+
+**Authentication**
+- Supabase Auth with email/password
+- Protected routes with loading states
+- Login/signup pages with validation
+
+**UI/UX**
+- Dark/light mode (persisted to localStorage)
+- Responsive design (mobile-first)
+- Toast notifications (success/error/info)
+- Loading states (spinner, full-screen)
+- Clean 404 page
+
+**Developer Experience**
+- Type-safe routing (TanStack Router)
+- File-based routing (automatic route generation)
+- Hot module replacement (HMR)
+- ESLint configured
+- Path aliases (`@/` for `src/`)
+
+**Architecture**
+- Clean component architecture
+- Reusable layouts (DashboardLayout)
+- Centralized auth state (useAuth hook)
+- Theme provider (useTheme hook)
+- Supabase Realtime ready
+
+---
+
+## License
+
+MIT
+
+## Author
+
+**Stu Mason**
+[stu@stuartmason.co.uk](mailto:stu@stuartmason.co.uk)
+
+---
+
+**Remember:** This is a DUMB frontend. Keep it simple. Keep business logic in n8n.

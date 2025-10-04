@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { useAuth } from '@/lib/auth-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Loading } from '@/components/loading'
 
 export const Route = createFileRoute('/dashboard')({
   component: Dashboard,
@@ -11,11 +12,7 @@ function Dashboard() {
   const { user, loading } = useAuth()
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
-      </div>
-    )
+    return <Loading text="Loading dashboard..." fullScreen />
   }
 
   if (!user) {

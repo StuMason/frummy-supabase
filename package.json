@@ -1,8 +1,28 @@
 {
-  "name": "upworker",
-  "private": true,
-  "version": "0.0.0",
+  "name": "frummy-supabase",
+  "version": "1.0.0",
+  "description": "A DUMB frontend template for building Supabase + n8n applications with zero business logic",
+  "private": false,
   "type": "module",
+  "author": {
+    "name": "Stu Mason",
+    "email": "stu@stuartmason.co.uk"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stumason/frummy-supabase"
+  },
+  "keywords": [
+    "react",
+    "vite",
+    "supabase",
+    "n8n",
+    "template",
+    "typescript",
+    "tailwindcss",
+    "tanstack-router"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -22,6 +42,7 @@
     "lucide-react": "^0.544.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.14"
   },
@@ -43,5 +64,9 @@
   },
   "overrides": {
     "vite": "npm:rolldown-vite@7.1.14"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   }
 }

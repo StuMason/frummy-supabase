@@ -186,8 +186,10 @@ npm run preview
 
 - **Build Tool:** Vite (using rolldown-vite@7.1.14 variant)
 - **Framework:** React 19 with TypeScript
-- **Styling:** Tailwind CSS v4 with Radix UI components
+- **Routing:** TanStack Router (file-based routing)
+- **Styling:** Tailwind CSS v4 with shadcn/ui components (Radix UI primitives)
 - **Backend:** Supabase (database, auth, realtime)
+- **Notifications:** Sonner (toast notifications)
 - **State:** No global state library - use Supabase realtime subscriptions
 
 ---
@@ -196,22 +198,29 @@ npm run preview
 
 ```
 src/
-├── components/           # React components
-│   ├── ui/              # Radix UI components (shadcn/ui pattern)
-│   ├── login-form.tsx   # Auth components
-│   ├── sign-up-form.tsx
-│   ├── forgot-password-form.tsx
-│   ├── update-password-form.tsx
-│   └── logout-button.tsx
+├── components/
+│   ├── ui/                    # shadcn/ui components (Button, Card, etc.)
+│   ├── nav.tsx                # Main navigation with auth state
+│   ├── footer.tsx             # Footer component
+│   ├── theme-toggle.tsx       # Dark/light mode toggle
+│   ├── loading.tsx            # Loading states (spinner, full-screen)
+│   └── dashboard-layout.tsx   # Reusable layout for protected pages
 ├── lib/
-│   ├── supabase/        # Supabase client setup
-│   │   ├── client.ts    # Browser client (createBrowserClient)
-│   │   ├── server.ts    # Server-side client
-│   │   └── middleware.ts
-│   └── utils.ts         # Utility functions (cn, etc.)
-├── middleware.ts        # Route middleware
-├── App.tsx              # Main app component
-└── main.tsx             # Entry point
+│   ├── auth-context.tsx       # Auth state management (useAuth hook)
+│   ├── theme-provider.tsx     # Theme state management (dark/light)
+│   ├── supabase/
+│   │   └── client.ts          # Supabase client setup
+│   └── utils.ts               # Utilities (cn for className merging)
+├── routes/                    # TanStack Router file-based routes
+│   ├── __root.tsx             # Root layout (providers, 404 handler)
+│   ├── index.tsx              # Landing page (/)
+│   ├── dashboard.tsx          # Dashboard (/dashboard) - protected
+│   └── auth/
+│       ├── login.tsx          # Login page with toast notifications
+│       └── signup.tsx         # Signup page
+├── App.tsx                    # Router setup
+├── main.tsx                   # Entry point
+└── index.css                  # Global styles + theme variables
 ```
 
 ---
@@ -220,16 +229,168 @@ src/
 
 ### Client Setup
 
-Supabase clients are configured in `src/lib/supabase/`:
-- `client.ts` - Browser client using `@supabase/ssr`
-- Uses environment variables: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY`
+Supabase clients are configured in `src/lib/supabase/client.ts`:
+- Browser client using `@supabase/ssr`
+- Uses Vite environment variables (VITE_* prefix)
+
+```typescript
+import { createBrowserClient } from '@supabase/ssr'
+
+export function createClient() {
+  return createBrowserClient(
+    import.meta.env.VITE_SUPABASE_URL!,
+    import.meta.env.VITE_SUPABASE_ANON_KEY!
+  )
+}
+```
 
 ### Environment Setup
 
 Required in `.env.local`:
+```env
+VITE_SUPABASE_URL=your-project-url
+VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY=your-anon-key
+
+**Note:** Vite uses `VITE_*` prefix, NOT `NEXT_PUBLIC_*`
+
+---
+
+## TanStack Router
+
+This project uses TanStack Router for file-based routing with full type safety.
+
+### File-Based Routing
+
+Routes are defined in the `src/routes/` directory:
+
+```
+src/routes/
+├── __root.tsx           # Root layout (wraps all routes)
+├── index.tsx            # / (landing page)
+├── dashboard.tsx        # /dashboard
+└── auth/
+    ├── login.tsx        # /auth/login
+    └── signup.tsx       # /auth/signup
+```
+
+### Creating a New Route
+
+Create a file in `src/routes/`:
+
+```typescript
+import { createFileRoute } from '@tanstack/react-router'
+import { DashboardLayout } from '@/components/dashboard-layout'
+
+export const Route = createFileRoute('/settings')({
+  component: Settings,
+})
+
+function Settings() {
+  return (
+    <DashboardLayout title="Settings" description="Manage your account">
+      {/* Your content */}
+    </DashboardLayout>
+  )
+}
+```
+
+### Root Layout
+
+The root layout (`src/routes/__root.tsx`) wraps all routes and includes:
+- Providers (ThemeProvider, AuthProvider)
+- Toast notifications (Toaster)
+- 404 handler (notFoundComponent)
+
+```typescript
+export const Route = createRootRoute({
+  component: () => (
+    <ThemeProvider>
+      <AuthProvider>
+        <Outlet />
+        <Toaster richColors position="bottom-right" closeButton />
+        <TanStackRouterDevtools />
+      </AuthProvider>
+    </ThemeProvider>
+  ),
+  notFoundComponent: NotFound,
+})
+```
+
+### Navigation
+
+Use TanStack Router's `Link` component for type-safe navigation:
+
+```typescript
+import { Link } from '@tanstack/react-router'
+
+<Link to="/dashboard">
+  <Button>Go to Dashboard</Button>
+</Link>
+```
+
+### Programmatic Navigation
+
+```typescript
+import { useNavigate } from '@tanstack/react-router'
+
+const navigate = useNavigate()
+navigate({ to: '/dashboard' })
+```
+
+---
+
+## Tailwind CSS v4 Configuration
+
+This project uses Tailwind CSS v4, which has different syntax from v3.
+
+### Theme Configuration
+
+Theme variables are defined in `src/index.css` using the `@theme` directive:
+
+```css
+@import 'tailwindcss';
+
+@theme {
+  --color-background: hsl(0 0% 100%);
+  --color-foreground: hsl(0 0% 10%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(0 0% 10%);
+  --color-primary: hsl(222 47% 11%);
+  --color-primary-foreground: hsl(210 40% 98%);
+  /* ... more color variables */
+}
+
+.dark {
+  color-scheme: dark;
+  --color-background: hsl(0 0% 10%);
+  --color-foreground: hsl(0 0% 98%);
+  /* ... dark mode color overrides */
+}
+```
+
+### Key Differences from v3
+
+1. **Use `@theme` instead of `@layer base`**
+2. **Color variables must use `--color-*` prefix**
+3. **Use `hsl()` values (NOT `oklch()` or raw values)**
+4. **Dark mode uses class-based `.dark` overrides**
+5. **Import Tailwind with `@import 'tailwindcss'`**
+
+### Adding Custom Colors
+
+```css
+@theme {
+  --color-custom: hsl(200 80% 50%);
+  --color-custom-foreground: hsl(0 0% 100%);
+}
+```
+
+Then use in components:
+```tsx
+<div className="bg-custom text-custom-foreground">
+  Custom colored element
+</div>
 ```
 
 ---
@@ -753,20 +914,174 @@ Deno.serve(async (req: Request) => {
 
 - Located in `src/components/ui/`
 - Uses Radix UI primitives
-- Styled with Tailwind CSS
+- Styled with Tailwind CSS v4
 - Variants via `class-variance-authority`
 - `cn()` utility from `src/lib/utils.ts` for className merging
 
+Add new components with:
+```bash
+npx shadcn@latest add button
+npx shadcn@latest add card
+npx shadcn@latest add dialog
+```
+
+### Layout Components
+
+**DashboardLayout** (`src/components/dashboard-layout.tsx`)
+- Reusable layout for protected pages
+- Includes Nav, Footer, and main content area
+- Props: `title`, `description`, `children`
+
+```typescript
+<DashboardLayout title="Dashboard" description="Welcome back">
+  {/* Your content */}
+</DashboardLayout>
+```
+
+**Nav** (`src/components/nav.tsx`)
+- Main navigation with auth state
+- Mobile menu support
+- Theme toggle integration
+
+**Footer** (`src/components/footer.tsx`)
+- Footer with tech stack links
+- Automatically included in DashboardLayout
+
 ### Auth Components
 
-Pre-built forms using Supabase Auth:
-- `login-form.tsx`
-- `sign-up-form.tsx`
-- `forgot-password-form.tsx`
-- `update-password-form.tsx`
-- `logout-button.tsx`
+Auth pages use TanStack Router file-based routing:
+- `src/routes/auth/login.tsx` - Login with toast notifications
+- `src/routes/auth/signup.tsx` - Signup form
 
 All use the client from `src/lib/supabase/client.ts`
+
+### Theme System
+
+**ThemeProvider** (`src/lib/theme-provider.tsx`)
+- Dark/light mode (no system option)
+- Defaults to system preference on first load
+- Persists to localStorage
+
+**ThemeToggle** (`src/components/theme-toggle.tsx`)
+- Button to toggle between dark/light
+- Shows sun icon in light mode, moon icon in dark mode
+
+Usage:
+```typescript
+import { useTheme } from '@/lib/theme-provider'
+
+const { theme, setTheme } = useTheme()
+setTheme('dark') // or 'light'
+```
+
+### Loading States
+
+**Loading Component** (`src/components/loading.tsx`)
+- Reusable loading spinner with text
+- Supports full-screen mode
+
+Usage:
+```typescript
+import { Loading } from '@/components/loading'
+
+// Inline loading
+<Loading text="Loading data..." />
+
+// Full-screen loading
+<Loading text="Loading..." fullScreen />
+```
+
+### Toast Notifications
+
+Uses Sonner for toast notifications:
+
+```typescript
+import { toast } from 'sonner'
+
+// Success toast
+toast.success('Success!', { description: 'Your changes have been saved' })
+
+// Error toast
+toast.error('Error', { description: 'Something went wrong' })
+
+// Info toast
+toast.info('Info', { description: 'Please check your email' })
+```
+
+Toaster is configured in `src/routes/__root.tsx`:
+```typescript
+<Toaster richColors position="bottom-right" closeButton />
+```
+
+### 404 Page
+
+404 handling is configured in `src/routes/__root.tsx` using `notFoundComponent`:
+
+```typescript
+function NotFound() {
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="text-center space-y-8 max-w-md">
+        <h1 className="text-9xl font-bold tracking-tight">404</h1>
+        <p className="text-2xl font-semibold">Page not found</p>
+        {/* Go Home and Go Back buttons */}
+      </div>
+    </div>
+  )
+}
+
+export const Route = createRootRoute({
+  component: RootComponent,
+  notFoundComponent: NotFound,
+})
+```
+
+### Auth Context
+
+**AuthProvider** (`src/lib/auth-context.tsx`)
+- Provides global auth state
+- Tracks user, session, loading state
+- Provides signOut function
+
+Usage:
+```typescript
+import { useAuth } from '@/lib/auth-context'
+
+const { user, session, loading, signOut } = useAuth()
+
+if (loading) {
+  return <Loading text="Loading..." fullScreen />
+}
+
+if (!user) {
+  window.location.href = '/auth/login'
+  return null
+}
+```
+
+### Protected Routes Pattern
+
+```typescript
+import { Loading } from '@/components/loading'
+import { useAuth } from '@/lib/auth-context'
+
+function MyProtectedPage() {
+  const { user, loading } = useAuth()
+
+  if (loading) {
+    return <Loading text="Loading..." fullScreen />
+  }
+
+  if (!user) {
+    window.location.href = '/auth/login'
+    return null
+  }
+
+  return <DashboardLayout title="My Page" description="...">
+    {/* Protected content */}
+  </DashboardLayout>
+}
+```
 
 ---
 
