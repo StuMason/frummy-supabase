@@ -199,12 +199,15 @@ npm run preview
 ```
 src/
 ├── components/
-│   ├── ui/                    # shadcn/ui components (Button, Card, etc.)
+│   ├── ui/                    # shadcn/ui components (Button, Card, Skeleton, etc.)
 │   ├── nav.tsx                # Main navigation with auth state
 │   ├── footer.tsx             # Footer component
 │   ├── theme-toggle.tsx       # Dark/light mode toggle
 │   ├── loading.tsx            # Loading states (spinner, full-screen)
+│   ├── error-boundary.tsx     # React error boundary
 │   └── dashboard-layout.tsx   # Reusable layout for protected pages
+├── config/
+│   └── app.ts                 # App configuration (name, nav links, footer)
 ├── lib/
 │   ├── auth-context.tsx       # Auth state management (useAuth hook)
 │   ├── theme-provider.tsx     # Theme state management (dark/light)
@@ -222,6 +225,44 @@ src/
 ├── main.tsx                   # Entry point
 └── index.css                  # Global styles + theme variables
 ```
+
+---
+
+## App Configuration
+
+All app-specific settings are centralized in `src/config/app.ts` for easy customization:
+
+```typescript
+export const appConfig = {
+  // App Identity
+  name: 'Frummy',
+  description: 'A DUMB frontend for Supabase + n8n',
+
+  // Author Info
+  author: {
+    name: 'Stu Mason',
+    email: 'stu@stuartmason.co.uk',
+  },
+
+  // Footer
+  footer: {
+    text: 'A DUMB frontend template',
+    showTechStack: true, // Set to false to hide "Built with..." links
+  },
+}
+```
+
+**When cloning for a new project:**
+1. Update `src/config/app.ts` with your app name and footer text
+2. Update `src/components/nav.tsx` to add/remove navigation links
+3. Update `index.html` with page title and meta description
+4. Update `package.json` with your project metadata
+5. Update `README.md` with your project details
+
+**What `appConfig` controls:**
+- `name` - Browser tab title (via useEffect in __root.tsx) and navigation logo
+- `footer.text` - Footer text content
+- `footer.showTechStack` - Show/hide "Built with..." tech stack links
 
 ---
 
@@ -991,6 +1032,24 @@ import { Loading } from '@/components/loading'
 <Loading text="Loading..." fullScreen />
 ```
 
+**Skeleton Loaders** (`src/components/ui/skeleton.tsx`)
+- Better UX for content loading states
+- Shows content structure while loading
+
+Usage:
+```typescript
+import { Skeleton } from '@/components/ui/skeleton'
+
+// Single skeleton
+<Skeleton className="h-12 w-full" />
+
+// Card skeleton
+<div className="space-y-3">
+  <Skeleton className="h-4 w-3/4" />
+  <Skeleton className="h-4 w-1/2" />
+</div>
+```
+
 ### Toast Notifications
 
 Uses Sonner for toast notifications:
@@ -1013,7 +1072,29 @@ Toaster is configured in `src/routes/__root.tsx`:
 <Toaster richColors position="bottom-right" closeButton />
 ```
 
-### 404 Page
+### Error Handling
+
+**Error Boundary** (`src/components/error-boundary.tsx`)
+- Catches React errors gracefully
+- Prevents white screen of death
+- Provides reset and home navigation
+
+Wraps the entire app in `src/routes/__root.tsx`:
+```typescript
+export const Route = createRootRoute({
+  component: () => (
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <Outlet />
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
+  ),
+})
+```
+
+**404 Page**
 
 404 handling is configured in `src/routes/__root.tsx` using `notFoundComponent`:
 

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { ThemeToggle } from './theme-toggle'
+import { appConfig } from '@/config/app'
 
 export function Nav() {
   const { user, signOut } = useAuth()
@@ -15,7 +16,7 @@ export function Nav() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="text-2xl font-bold tracking-tight">
-            Frummy
+            {appConfig.name}
           </Link>
 
           {/* Desktop Navigation */}

@@ -3,6 +3,9 @@ import { DashboardLayout } from '@/components/dashboard-layout'
 import { useAuth } from '@/lib/auth-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loading } from '@/components/loading'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { useState } from 'react'
 
 export const Route = createFileRoute('/dashboard')({
   component: Dashboard,
@@ -10,6 +13,7 @@ export const Route = createFileRoute('/dashboard')({
 
 function Dashboard() {
   const { user, loading } = useAuth()
+  const [showSkeletons, setShowSkeletons] = useState(false)
 
   if (loading) {
     return <Loading text="Loading dashboard..." fullScreen />
@@ -20,11 +24,62 @@ function Dashboard() {
     return null
   }
 
+  // Function to trigger an error (for testing Error Boundary)
+  const triggerError = () => {
+    throw new Error('This is a test error to demonstrate the Error Boundary!')
+  }
+
   return (
     <DashboardLayout
       title="Dashboard"
       description="Welcome back! Here's an overview of your account."
     >
+      {/* Demo Section */}
+      <div className="mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Component Demos</CardTitle>
+            <CardDescription>
+              Test the Error Boundary and Skeleton loaders
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex gap-3">
+            <Button onClick={triggerError} variant="destructive">
+              Trigger Error Boundary
+            </Button>
+            <Button onClick={() => setShowSkeletons(!showSkeletons)} variant="outline">
+              {showSkeletons ? 'Hide' : 'Show'} Skeleton Loaders
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Skeleton Demo */}
+      {showSkeletons && (
+        <div className="mb-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Skeleton Loading Example</CardTitle>
+              <CardDescription>This is what content looks like while loading</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+              </div>
+              <div className="flex gap-3">
+                <Skeleton className="h-10 w-24" />
+                <Skeleton className="h-10 w-24" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Stats Card */}
         <Card>

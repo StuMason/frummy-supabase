@@ -2,9 +2,31 @@ import { createRootRoute, Link, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { AuthProvider } from '@/lib/auth-context'
 import { ThemeProvider } from '@/lib/theme-provider'
+import { ErrorBoundary } from '@/components/error-boundary'
 import { Toaster } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Home, ArrowLeft } from 'lucide-react'
+import { appConfig } from '@/config/app'
+import { useEffect } from 'react'
+
+function RootComponent() {
+  // Update document title from config
+  useEffect(() => {
+    document.title = appConfig.name
+  }, [])
+
+  return (
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <Outlet />
+          <Toaster richColors position="bottom-right" closeButton />
+          <TanStackRouterDevtools />
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
+  )
+}
 
 function NotFound() {
   return (
@@ -36,14 +58,6 @@ function NotFound() {
 }
 
 export const Route = createRootRoute({
-  component: () => (
-    <ThemeProvider>
-      <AuthProvider>
-        <Outlet />
-        <Toaster richColors position="bottom-right" closeButton />
-        <TanStackRouterDevtools />
-      </AuthProvider>
-    </ThemeProvider>
-  ),
+  component: RootComponent,
   notFoundComponent: NotFound,
 })

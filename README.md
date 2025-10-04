@@ -20,7 +20,17 @@ cd my-project
 npm install
 ```
 
-### 2. Set up Supabase
+### 2. Customize for your project
+
+Update these files with your project details:
+
+- [ ] `src/config/app.ts` - App name and footer text (updates page title, nav logo, footer)
+- [ ] `src/components/nav.tsx` - Add/remove navigation links as needed
+- [ ] `index.html` - Page title and meta description
+- [ ] `package.json` - name, description, author, repository URL
+- [ ] `README.md` - Update this file with your project details
+
+### 3. Set up Supabase
 
 1. Create a new Supabase project at [supabase.com](https://supabase.com)
 2. Copy `.env.example` to `.env.local`:
@@ -33,7 +43,7 @@ npm install
    VITE_SUPABASE_ANON_KEY=your-anon-key
    ```
 
-### 3. Run the dev server
+### 4. Run the dev server
 
 ```bash
 npm run dev
@@ -41,7 +51,7 @@ npm run dev
 
 Visit `http://localhost:5173` - you should see the landing page.
 
-### 4. (Optional) Disable email confirmation
+### 5. (Optional) Disable email confirmation
 
 For development, you might want to disable email confirmation:
 
@@ -70,11 +80,12 @@ This lets you sign up and test immediately without setting up email.
 ```
 src/
 ├── components/
-│   ├── ui/                    # shadcn/ui components (Button, Card, etc.)
+│   ├── ui/                    # shadcn/ui components (Button, Card, Skeleton, etc.)
 │   ├── nav.tsx                # Main navigation with auth state
 │   ├── footer.tsx             # Footer component
 │   ├── theme-toggle.tsx       # Dark/light mode toggle
 │   ├── loading.tsx            # Loading states (spinner, full-screen)
+│   ├── error-boundary.tsx     # React error boundary
 │   └── dashboard-layout.tsx   # Reusable layout for protected pages
 ├── lib/
 │   ├── auth-context.tsx       # Auth state management (useAuth hook)
@@ -207,6 +218,26 @@ toast.error('Error', { description: 'Something went wrong' })
 toast.info('Info', { description: 'Please check your email' })
 ```
 
+### Show loading states
+
+```tsx
+import { Loading } from '@/components/loading'
+import { Skeleton } from '@/components/ui/skeleton'
+
+// Spinner loading
+<Loading text="Loading..." />
+
+// Full screen loading
+<Loading text="Loading dashboard..." fullScreen />
+
+// Skeleton loading (better UX)
+<div className="space-y-3">
+  <Skeleton className="h-12 w-full" />
+  <Skeleton className="h-4 w-3/4" />
+  <Skeleton className="h-4 w-1/2" />
+</div>
+```
+
 ### Add a new UI component
 
 Use shadcn/ui CLI:
@@ -297,7 +328,8 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 - Dark/light mode (persisted to localStorage)
 - Responsive design (mobile-first)
 - Toast notifications (success/error/info)
-- Loading states (spinner, full-screen)
+- Loading states (spinner, skeleton, full-screen)
+- Error boundary (graceful error handling)
 - Clean 404 page
 
 **Developer Experience**
